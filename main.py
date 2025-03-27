@@ -30,8 +30,8 @@ metrics.info('app_info', 'Weather Service Info', version='1.0.0')
 # Configuration
 class Config:
     OWM_API_KEY = os.getenv('OWM_API_KEY')
-    LOG_DIR = os.getenv('LOG_DIR', 'logs')
-    CACHE_TTL = timedelta(hours=int(os.getenv('CACHE_TTL_HOURS', 1)))
+    LOG_DIR = os.getenv('LOG_DIR', 'logs')  # Исправлено
+    CACHE_TTL = timedelta(hours=int(os.getenv('CACHE_TTL_HOURS', 1)))  # Исправлено
     CACHE_DIR = Path(os.getenv('CACHE_DIR', 'weather_cache'))
     MAX_CACHE_SIZE = int(os.getenv('MAX_CACHE_SIZE', 1000))
 
@@ -42,8 +42,8 @@ app.config.from_object(Config)
 # Initialize cache
 def init_cache():
     """Initialize cache directory"""
-    app.config.CACHE_DIR.mkdir(exist_ok=True)
-    app.logger.info(f"Cache directory initialized at {app.config.CACHE_DIR.absolute()}")
+    app.config['CACHE_DIR'].mkdir(exist_ok=True)
+    app.logger.info(f"Cache directory initialized at {app.config['CACHE_DIR'].absolute()}")
 
 
 # Cache utilities
@@ -55,7 +55,7 @@ def get_cache_key(lat: float, lon: float) -> str:
 
 def get_cached_weather(lat: float, lon: float) -> dict:
     """Get weather data from cache"""
-    cache_file = app.config.CACHE_DIR / f"{get_cache_key(lat, lon)}.json"
+    cache_file = app.config["CACHE_DIR"] / f"{get_cache_key(lat, lon)}.json"
 
     if not cache_file.exists():
         return None
@@ -65,7 +65,7 @@ def get_cached_weather(lat: float, lon: float) -> dict:
             data = json.load(f)
 
         cache_time = datetime.fromisoformat(data['timestamp'])
-        if datetime.now() - cache_time < app.config.CACHE_TTL:
+        if datetime.now() - cache_time < app.config["CACHE_TTL"]:
             app.logger.debug(f"Cache hit for {cache_file.name}")
             return data['weather_data']
 
@@ -78,7 +78,7 @@ def get_cached_weather(lat: float, lon: float) -> dict:
 
 def set_cached_weather(lat: float, lon: float, weather_data: dict):
     """Save weather data to cache"""
-    cache_file = app.config.CACHE_DIR / f"{get_cache_key(lat, lon)}.json"
+    cache_file = app.config["CACHE_DIR"] / f"{get_cache_key(lat, lon)}.json"
 
     data = {
         'timestamp': datetime.now().isoformat(),
@@ -99,13 +99,13 @@ def clean_expired_cache():
     now = datetime.now()
     deleted = 0
 
-    for cache_file in app.config.CACHE_DIR.glob('*.json'):
+    for cache_file in app.config['CACHE_DIR'].glob('*.json'):
         try:
             with open(cache_file, 'r') as f:
                 data = json.load(f)
 
             cache_time = datetime.fromisoformat(data['timestamp'])
-            if now - cache_time >= app.config.CACHE_TTL:
+            if now - cache_time >= app.config["CACHE_TTL"]:
                 cache_file.unlink()
                 deleted += 1
         except Exception as e:
@@ -121,8 +121,8 @@ def clean_cache():
     clean_expired_cache()
 
     # Remove oldest files if cache is too big
-    files = sorted(app.config.CACHE_DIR.glob('*.json'), key=os.path.getmtime)
-    while len(files) > app.config.MAX_CACHE_SIZE:
+    files = sorted(app.config['CACHE_DIR'].glob('*.json'), key=os.path.getmtime)
+    while len(files) > app.config['MAX_CACHE_SIZE']:
         try:
             files[0].unlink()
             files = files[1:]
@@ -135,10 +135,10 @@ def clean_cache():
 # Setup logging
 def setup_logging():
     """Configure logging system"""
-    if not os.path.exists(app.config.LOG_DIR):
-        os.makedirs(app.config.LOG_DIR)
+    if not os.path.exists(app.config['LOG_DIR']):
+        os.makedirs(app.config['LOG_DIR'])
 
-    log_file = os.path.join(app.config.LOG_DIR, 'weather_service.log')
+    log_file = os.path.join(app.config['LOG_DIR'], 'weather_service.log')
 
     handler = RotatingFileHandler(
         log_file, maxBytes=1000000, backupCount=5
@@ -280,7 +280,7 @@ def get_humidity_info():
             params = {
                 'lat': lat,
                 'lon': lon,
-                'appid': app.config.OWM_API_KEY,
+                'appid': app.config["OWM_API_KEY"],
                 'units': 'metric'
             }
 
@@ -348,9 +348,9 @@ def get_humidity_info():
             'data_source': 'OpenWeatherMap',
             'cache_info': {
                 'used_cache': from_cache,
-                'cache_expires': (datetime.now() + app.config.CACHE_TTL).isoformat()
+                'cache_expires': (datetime.now() + app.config["CACHE_TTL"]).isoformat()
                 if not from_cache else None,
-                'cache_ttl_hours': app.config.CACHE_TTL.total_seconds() / 3600
+                'cache_ttl_hours': app.config["CACHE_TTL"].total_seconds() / 3600
             }
         }
 

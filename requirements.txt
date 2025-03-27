@@ -1,5 +1,14 @@
-Flask==2.3.2
-requests==2.31.0
-python-dotenv==1.0.0
-gunicorn==20.1.0
-flask-limiter
+# Основные зависимости
+flask==2.3.2              # Веб-фреймворк
+python-dotenv==1.0.0      # Загрузка переменных окружения из .env
+requests==2.31.0          # HTTP-запросы к OpenWeatherMap API
+flask-limiter==2.8.1      # Ограничение частоты запросов
+apscheduler==3.9.1        # Планировщик для периодической очистки кэша
+prometheus-flask-exporter==0.21.0  # Метрики для мониторинга
+
+# Логирование (обычно входит в стандартную библиотеку Python)
+# logging
+# logging.handlers
+
+# Дополнительные утилиты
+gunicorn==20.1.0          # Для production-развертывания (опционально)
